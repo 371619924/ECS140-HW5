@@ -18,14 +18,14 @@ type LGraph func(node) ([]edge, bool)
 func FindSequence(g1, g2 LGraph, s, t node, k uint) ([]rune, bool) {
 	// TODO: Complete the function.
 	sequences := make(chan []rune)
+
 	go func() {
-		defer close(sequences)
+
 		findSequences(g1, s, t, k, []rune{}, sequences)
+		close(sequences)
+	}()
 
-}()
-
-
-var answer []rune
+	var answer []rune
 	found := false
 	for sequence := range sequences {
 		if !hasSequence(g2, s, t, sequence) && !found {
