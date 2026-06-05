@@ -17,5 +17,66 @@ type LGraph func(node) ([]edge, bool)
 // it returns (nil, false).
 func FindSequence(g1, g2 LGraph, s, t node, k uint) ([]rune, bool) {
 	// TODO: Complete the function.
-	panic("TODO: implement this!")
+	sequences := make(chan []rune)
+	go func() {
+		defer close(sequences)
+		findSequences(g1, s, t, k, []rune{}, sequences)
+
+}()
+
+
+var answer []rune
+	found := false
+	for sequence := range sequences {
+		if !hasSequence(g2, s, t, sequence) && !found {
+			answer = sequence
+			found = true
+		}
+	}
+
+	if found {
+		return answer, true
+	}
+	return nil, false
+}
+
+func findSequences(g LGraph, current, target node, length uint, path []rune, out chan<- []rune) {
+	if length == 0 {
+		if current == target {
+			sequence := make([]rune, len(path))
+			copy(sequence, path)
+			out <- sequence
+		}
+		return
+	}
+
+	edges, exists := g(current)
+	if !exists {
+		return
+	}
+
+	for _, next := range edges {
+		path = append(path, next.label)
+		findSequences(g, next.destination, target, length-1, path, out)
+		path = path[:len(path)-1]
+	}
+}
+
+func hasSequence(g LGraph, current, target node, sequence []rune) bool {
+	_, exists := g(current)
+	if !exists {
+		return false
+	}
+
+	if len(sequence) == 0 {
+		return current == target
+	}
+
+	edges, _ := g(current)
+	for _, next := range edges {
+		if next.label == sequence[0] && hasSequence(g, next.destination, target, sequence[1:]) {
+			return true
+		}
+	}
+	return false
 }
